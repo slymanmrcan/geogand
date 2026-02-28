@@ -1,5 +1,5 @@
 (function initUtils(global) {
-  const config = global.GeoTahminConfig;
+  const config = global.GeogandConfig;
 
   function randomWorldCoords() {
     const regions = config.randomRegions;
@@ -54,7 +54,7 @@
     return `${Math.round(distKm).toLocaleString()} km`;
   }
 
-  global.GeoTahminUtils = {
+  global.GeogandUtils = {
     randomWorldCoords,
     calcScore,
     haversine,

@@ -1,4 +1,4 @@
-# GeoTahmin
+# Geogand
 
 Acik kaynak, tarayicida calisan bir harita tahmin oyunu.
 Google Street View panoramasi uzerinden nerede oldugunu tahmin edersin.
@@ -48,28 +48,15 @@ Sonra:
 http://localhost:5500
 ```
 
-## GitHub Pages ile Otomatik Deploy
+## Statik Yayinlama
 
-Bu repoda push ile otomatik deploy workflow'u vardir:
+Bu proje tamamen statik oldugu icin herhangi bir CI/CD workflow zorunlu degildir.
 
-- [deploy-pages.yml](.github/workflows/deploy-pages.yml)
+Asagidaki ortamlarda dogrudan yayinlayabilirsin:
 
-Calisma sekli:
-
-1. `main` veya `master` branch'ine push.
-2. GitHub Actions artifact olusturur.
-3. GitHub Pages'e deploy eder.
-
-Ilk kurulumda repo ayari:
-
-1. `Settings > Pages`
-2. `Build and deployment` altinda `Source: GitHub Actions` sec.
-
-Sayfa adresin tipik olarak:
-
-```text
-https://<kullanici-adi>.github.io/<repo-adi>/
-```
+- Nginx
+- GitHub Pages
+- Netlify / Vercel (static)
 
 ## Google Maps API Key nasil alinir?
 

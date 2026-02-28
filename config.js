@@ -23,7 +23,7 @@
     })
   });
 
-  global.GeoTahminConfig = Object.freeze({
+  global.GeogandConfig = Object.freeze({
     defaultPreset: 'medium',
     defaultRoundCount: 5,
     roundCountOptions: Object.freeze([1, 3, 5, 10]),
@@ -32,10 +32,10 @@
     maxPhotoAttempts: 15,
     maxRoundRetries: 3,
     noPhotoRetryDelayMs: 3000,
-    localStorageKey: 'geotahmin_google_api_key',
-    localStoragePresetKey: 'geotahmin_difficulty_preset',
-    localStorageRoundCountKey: 'geotahmin_round_count',
-    localStorageRoundTimeKey: 'geotahmin_round_time',
+    localStorageKey: 'geogand_google_api_key',
+    localStoragePresetKey: 'geogand_difficulty_preset',
+    localStorageRoundCountKey: 'geogand_round_count',
+    localStorageRoundTimeKey: 'geogand_round_time',
 
     difficultyPresets,
 

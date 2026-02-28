@@ -1,5 +1,5 @@
 (function initState(global) {
-  const config = global.GeoTahminConfig;
+  const config = global.GeogandConfig;
   const presetIds = Object.keys(config.difficultyPresets);
   const roundCountOptions = Array.isArray(config.roundCountOptions)
     ? config.roundCountOptions.map(Number).filter(Number.isFinite)
@@ -319,7 +319,7 @@
     };
   }
 
-  global.GeoTahminState = {
+  global.GeogandState = {
     state,
     clearTimer,
     clearRetryTimeout,

@@ -1,10 +1,10 @@
 (function initGame(global) {
-  const config = global.GeoTahminConfig;
-  const stateApi = global.GeoTahminState;
+  const config = global.GeogandConfig;
+  const stateApi = global.GeogandState;
   const state = stateApi.state;
-  const ui = global.GeoTahminUI;
-  const utils = global.GeoTahminUtils;
-  const sv = global.GeoTahminStreetView;
+  const ui = global.GeogandUI;
+  const utils = global.GeogandUtils;
+  const sv = global.GeogandStreetView;
 
   let isAdvancingRound = false;
   let mapsApiLoaded = false;

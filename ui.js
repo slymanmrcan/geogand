@@ -1,6 +1,6 @@
 (function initUI(global) {
-  const config = global.GeoTahminConfig;
-  const stateApi = global.GeoTahminState;
+  const config = global.GeogandConfig;
+  const stateApi = global.GeogandState;
   const state = stateApi.state;
 
   function byId(id) {
@@ -238,7 +238,7 @@
       return false;
     }
 
-    state.streetViewPanorama = global.GeoTahminStreetView.createPanorama('viewer', panoId);
+    state.streetViewPanorama = global.GeogandStreetView.createPanorama('viewer', panoId);
     return Boolean(state.streetViewPanorama);
   }
 
@@ -462,7 +462,7 @@
   populateSavedKey();
   initializePresetSelector();
 
-  global.GeoTahminUI = {
+  global.GeogandUI = {
     refs,
     setSplashVisible,
     setGameVisible,

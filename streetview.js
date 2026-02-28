@@ -1,5 +1,5 @@
 (function initStreetView(global) {
-  const config = global.GeoTahminConfig;
+  const config = global.GeogandConfig;
 
   async function findNearestPanorama(lat, lng, apiKey) {
     const url =
@@ -130,7 +130,7 @@
     });
   }
 
-  global.GeoTahminStreetView = {
+  global.GeogandStreetView = {
     loadRandomPanorama,
     createPanorama
   };
