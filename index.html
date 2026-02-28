@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoTahmin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="geotahmin.css">
+</head>
+<body>
+
+<div id="splash">
+  <h1>GEO<span>TAHMİN</span></h1>
+  <p>Google Street View'da rastgele bir noktaya ışınlanıyorsun. Nerede olduğunu bul!</p>
+
+  <div class="api-box">
+    <label>Google Maps API Key</label>
+    <div class="key-row">
+      <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off">
+      <span class="key-saved-badge" id="key-saved-badge">KAYITLI</span>
+      <button class="icon-btn" id="clear-key-btn" title="Key'i sil">SIL</button>
+    </div>
+
+    <small>
+      Nasil alinir: <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer">console.cloud.google.com</a>
+      → APIs &amp; Services → Enable: <strong>Maps JavaScript API</strong> + <strong>Street View Static API</strong>
+      → Credentials → Create API Key
+    </small>
+
+    <label for="difficulty-select">Baslangic Ayari</label>
+    <select id="difficulty-select" class="select-input">
+      <option value="easy">Kolay</option>
+      <option value="medium">Orta</option>
+      <option value="hard">Zor</option>
+    </select>
+
+    <label for="round-count-select">Tur Sayisi</label>
+    <select id="round-count-select" class="select-input">
+      <option value="1">1 Tur</option>
+      <option value="3">3 Tur</option>
+      <option value="5">5 Tur</option>
+      <option value="10">10 Tur</option>
+    </select>
+
+    <label for="round-time-select">Tur Suresi</label>
+    <select id="round-time-select" class="select-input">
+      <option value="preset">Preset'e Gore</option>
+      <option value="0">Suresiz</option>
+      <option value="30">30 saniye</option>
+      <option value="60">60 saniye</option>
+      <option value="90">90 saniye</option>
+      <option value="120">120 saniye</option>
+    </select>
+
+    <div id="rules-preview"></div>
+
+    <div id="status-msg"></div>
+    <button class="btn" id="start-btn">OYUNA BASLA</button>
+    <small id="rules-hint" style="text-align:center"></small>
+  </div>
+</div>
+
+<div id="game">
+  <div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+
+  <div id="viewer">
+    <div class="overlay-center" id="loading">
+      <div class="dot-row">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <p id="loading-text">KONUM ARANIYOR...</p>
+    </div>
+    <div id="no-photo">
+      <span>PHOTO</span>
+      <span id="no-photo-text">Bu bolgede Street View yok, yeni konum deneniyor...</span>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div>
+      <div class="hud-label">Puan</div>
+      <div class="hud-val" id="total-score-hud">0</div>
+    </div>
+    <div class="hud-div"></div>
+    <div class="hud-round" id="round-info">TUR 1 / 5</div>
+    <div class="hud-div"></div>
+    <div>
+      <div class="hud-label">Sure</div>
+      <div class="hud-val" id="timer-display">90</div>
+    </div>
+  </div>
+
+  <div id="map-panel">
+    <div id="guess-map"></div>
+    <div id="map-actions">
+      <button class="btn ghost" id="clear-btn" style="width:auto;padding:.55rem .9rem;font-size:.72rem">SIL</button>
+      <button class="btn ghost" id="refresh-btn" style="width:auto;padding:.55rem .9rem;font-size:.72rem" disabled>YENILE</button>
+      <button class="btn" id="guess-btn" disabled>TAHMIN ET</button>
+    </div>
+  </div>
+
+  <div id="result-overlay">
+    <div class="result-card">
+      <div class="round-score" id="round-score-display">0</div>
+      <div class="dist-label">MESAFE</div>
+      <div class="dist-val" id="round-dist-display">-</div>
+      <div id="result-map"></div>
+      <div class="actions">
+        <button class="btn" id="next-btn">SONRAKI TUR -></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="final-overlay">
+    <h2>TOPLAM PUAN</h2>
+    <div class="final-score" id="final-score-display">0</div>
+    <div id="final-grade"></div>
+    <div class="round-breakdown" id="round-breakdown"></div>
+    <div id="usage-summary"></div>
+    <div class="final-actions">
+      <button class="btn" id="play-again-btn">TEKRAR OYNA</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="config.js"></script>
+<script src="state.js"></script>
+<script src="utils.js"></script>
+<script src="streetview.js"></script>
+<script src="ui.js"></script>
+<script src="game.js"></script>
+
+</body>
+</html>
