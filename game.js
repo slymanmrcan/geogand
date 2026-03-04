@@ -10,6 +10,48 @@
   let mapsApiLoaded = false;
   let loadedMapsApiKey = '';
 
+  function getEconomySettings() {
+    return config.economyMode || {};
+  }
+
+  function getActivePhotoAttempts() {
+    const economySettings = getEconomySettings();
+    if (state.economyMode) {
+      const ecoAttempts = Number(economySettings.maxPhotoAttempts);
+      if (Number.isFinite(ecoAttempts) && ecoAttempts > 0) {
+        return Math.floor(ecoAttempts);
+      }
+    }
+
+    return config.maxPhotoAttempts;
+  }
+
+  function getActiveMaxRoundRetries() {
+    const economySettings = getEconomySettings();
+    if (state.economyMode) {
+      const ecoRetries = Number(economySettings.maxRoundRetries);
+      if (Number.isFinite(ecoRetries) && ecoRetries > 0) {
+        return Math.floor(ecoRetries);
+      }
+    }
+
+    return state.rules.maxRoundRetries;
+  }
+
+  function isManualRefreshDisabled() {
+    const economySettings = getEconomySettings();
+    return state.economyMode && economySettings.disableManualRefresh !== false;
+  }
+
+  function setRefreshAvailability(isEnabled) {
+    if (!ui.refs.refreshBtn) {
+      return;
+    }
+
+    const canRefresh = Boolean(isEnabled) && !isManualRefreshDisabled();
+    ui.refs.refreshBtn.disabled = !canRefresh;
+  }
+
   function getFatalMessage(reason) {
     if (reason === 'REQUEST_DENIED') {
       return 'API key yetkisiz. Maps JavaScript ve Street View API izinlerini kontrol et.';
@@ -29,9 +71,7 @@
     ui.setStatusMessage(message, true);
     ui.setGameVisible(false);
     ui.setSplashVisible(true);
-    if (ui.refs.refreshBtn) {
-      ui.refs.refreshBtn.disabled = true;
-    }
+    setRefreshAvailability(false);
 
     if (resetMaps) {
       mapsApiLoaded = false;
@@ -86,6 +126,7 @@
     stateApi.saveRoundTimeOverride(selectedRoundTimeOverride);
     ui.setRulesSummary(state.rules);
     stateApi.resetGameState();
+    state.economyMode = ui.getEconomyModeEnabled();
 
     ui.refs.startBtn.disabled = true;
     ui.setStatusMessage('API baglantisi kontrol ediliyor...', false);
@@ -108,9 +149,7 @@
       ui.setStatusMessage('', false);
     });
     ui.setTotalScore(0);
-    if (ui.refs.refreshBtn) {
-      ui.refs.refreshBtn.disabled = true;
-    }
+    setRefreshAvailability(false);
 
     ui.refs.startBtn.disabled = false;
     await beginRound(false);
@@ -127,9 +166,7 @@
 
     state.roundScores.push(0);
     ui.setTotalScore(state.totalScore);
-    if (ui.refs.refreshBtn) {
-      ui.refs.refreshBtn.disabled = true;
-    }
+    setRefreshAvailability(false);
 
     ui.showRoundResult({
       score: 0,
@@ -157,9 +194,7 @@
       ui.hideFinalOverlay();
       ui.showNoPhoto(false);
       ui.showLoading(true, 'KONUM ARANIYOR...');
-      if (ui.refs.refreshBtn) {
-        ui.refs.refreshBtn.disabled = true;
-      }
+      setRefreshAvailability(false);
 
       if (!isRetry) {
         state.round += 1;
@@ -182,6 +217,9 @@
           if (attemptResult.status !== 'OK') {
             console.warn(`Attempt ${attemptResult.attempt} status:`, attemptResult.status, attemptResult.error || '');
           }
+        },
+        {
+          maxAttempts: getActivePhotoAttempts()
         }
       );
 
@@ -198,7 +236,8 @@
         }
 
         state.roundRetryCount += 1;
-        if (state.roundRetryCount >= state.rules.maxRoundRetries) {
+        const maxRoundRetries = getActiveMaxRoundRetries();
+        if (state.roundRetryCount >= maxRoundRetries) {
           ui.showLoading(false);
           ui.showNoPhoto(false);
           resolveSkippedRound('Bu tur icin Street View bulunamadi (pas gecildi).');
@@ -208,7 +247,7 @@
         ui.showLoading(false);
         ui.showNoPhoto(
           true,
-          `Bu turda Street View yok. Tekrar deneme ${state.roundRetryCount}/${state.rules.maxRoundRetries}...`
+          `Bu turda Street View yok. Tekrar deneme ${state.roundRetryCount}/${maxRoundRetries}...`
         );
 
         state.retryTimeout = setTimeout(function retrySameRound() {
@@ -230,9 +269,7 @@
 
       stateApi.trackPanoramaLoad();
       ui.showLoading(false);
-      if (ui.refs.refreshBtn) {
-        ui.refs.refreshBtn.disabled = false;
-      }
+      setRefreshAvailability(true);
       startTimer();
     } finally {
       isAdvancingRound = false;
@@ -279,9 +316,7 @@
     state.totalScore += score;
     state.roundScores.push(score);
     ui.setTotalScore(state.totalScore);
-    if (ui.refs.refreshBtn) {
-      ui.refs.refreshBtn.disabled = true;
-    }
+    setRefreshAvailability(false);
 
     ui.showRoundResult({
       score,
@@ -293,10 +328,8 @@
   }
 
   function showFinal() {
-    if (ui.refs.refreshBtn) {
-      ui.refs.refreshBtn.disabled = true;
-    }
-    ui.showFinal(state.totalScore, state.roundScores, stateApi.getUsageSnapshot(), state.rules);
+    setRefreshAvailability(false);
+    ui.showFinal(state.totalScore, state.roundScores, stateApi.getUsageSnapshot(), state.rules, state.economyMode);
   }
 
   async function handleNextClick() {
@@ -312,14 +345,12 @@
     stateApi.resetGameState();
     ui.hideFinalOverlay();
     ui.setTotalScore(0);
-    if (ui.refs.refreshBtn) {
-      ui.refs.refreshBtn.disabled = true;
-    }
+    setRefreshAvailability(false);
     await beginRound(false);
   }
 
   async function handleRefreshClick() {
-    if (state.round <= 0 || state.isRoundResolved) {
+    if (state.round <= 0 || state.isRoundResolved || isManualRefreshDisabled()) {
       return;
     }
 

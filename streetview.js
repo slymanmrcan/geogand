@@ -37,11 +37,15 @@
     };
   }
 
-  async function loadRandomPanorama(apiKey, getCoords, onAttemptResult) {
+  async function loadRandomPanorama(apiKey, getCoords, onAttemptResult, options) {
     let lastError = null;
     let lastStatus = null;
+    const requestedAttempts = options && Number(options.maxAttempts);
+    const maxAttempts = Number.isFinite(requestedAttempts) && requestedAttempts > 0
+      ? Math.floor(requestedAttempts)
+      : config.maxPhotoAttempts;
 
-    for (let attempt = 1; attempt <= config.maxPhotoAttempts; attempt += 1) {
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
         const coords = getCoords();
         const result = await findNearestPanorama(coords.lat, coords.lng, apiKey);

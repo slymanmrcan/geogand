@@ -54,6 +54,11 @@
       <option value="120">120 saniye</option>
     </select>
 
+    <label class="toggle-row" for="economy-mode-input">
+      <input type="checkbox" id="economy-mode-input">
+      <span>EKO MOD (daha az deneme, yenileme kapali)</span>
+    </label>
+
     <div id="rules-preview"></div>
 
     <div id="status-msg"></div>
@@ -94,6 +99,7 @@
 
   <div id="map-panel">
     <div id="guess-map"></div>
+    <div id="guess-selection-info">Secim yok</div>
     <div id="map-actions">
       <button class="btn ghost" id="clear-btn" style="width:auto;padding:.55rem .9rem;font-size:.72rem">SIL</button>
       <button class="btn ghost" id="refresh-btn" style="width:auto;padding:.55rem .9rem;font-size:.72rem" disabled>YENILE</button>
@@ -106,8 +112,11 @@
       <div class="round-score" id="round-score-display">0</div>
       <div class="dist-label">MESAFE</div>
       <div class="dist-val" id="round-dist-display">-</div>
+      <div class="result-meta" id="result-meta"></div>
+      <div class="result-legend">Sari: Gercek konum | Kirmizi: Senin secimin</div>
       <div id="result-map"></div>
       <div class="actions">
+        <button class="btn ghost" id="result-focus-btn" style="width:auto;padding:.75rem 1rem">HARITAYI BUYUT</button>
         <button class="btn" id="next-btn">SONRAKI TUR -></button>
       </div>
     </div>

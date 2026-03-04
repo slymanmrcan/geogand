@@ -31,6 +31,11 @@
     roundTimeOverrideOptions: Object.freeze(['preset', 0, 30, 60, 90, 120]),
     maxPhotoAttempts: 15,
     maxRoundRetries: 3,
+    economyMode: Object.freeze({
+      maxPhotoAttempts: 8,
+      maxRoundRetries: 1,
+      disableManualRefresh: true
+    }),
     noPhotoRetryDelayMs: 3000,
     localStorageKey: 'geogand_google_api_key',
     localStoragePresetKey: 'geogand_difficulty_preset',

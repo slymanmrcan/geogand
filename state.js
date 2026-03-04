@@ -147,6 +147,7 @@
     streetViewPanorama: null,
     isRoundResolved: false,
     roundRetryCount: 0,
+    economyMode: false,
     usage: createUsageStats()
   };
 

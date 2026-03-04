@@ -18,6 +18,7 @@
     difficultySelect: byId('difficulty-select'),
     roundCountSelect: byId('round-count-select'),
     roundTimeSelect: byId('round-time-select'),
+    economyModeInput: byId('economy-mode-input'),
     rulesPreview: byId('rules-preview'),
     rulesHint: byId('rules-hint'),
     guessBtn: byId('guess-btn'),
@@ -35,6 +36,9 @@
     roundInfo: byId('round-info'),
     roundScoreDisplay: byId('round-score-display'),
     roundDistDisplay: byId('round-dist-display'),
+    guessSelectionInfo: byId('guess-selection-info'),
+    resultMeta: byId('result-meta'),
+    resultFocusBtn: byId('result-focus-btn'),
     resultOverlay: byId('result-overlay'),
     finalOverlay: byId('final-overlay'),
     finalScoreDisplay: byId('final-score-display'),
@@ -102,6 +106,49 @@
     return value === 'preset' ? 'preset' : Number(value);
   }
 
+  function setEconomyModeEnabled(isEnabled) {
+    if (!refs.economyModeInput) {
+      return;
+    }
+    refs.economyModeInput.checked = Boolean(isEnabled);
+  }
+
+  function getEconomyModeEnabled() {
+    if (!refs.economyModeInput) {
+      return false;
+    }
+    return Boolean(refs.economyModeInput.checked);
+  }
+
+  function formatCoordValue(value) {
+    if (!Number.isFinite(value)) {
+      return '?';
+    }
+    return value.toFixed(4);
+  }
+
+  function formatCoords(coords) {
+    if (!coords) {
+      return '-';
+    }
+    return `${formatCoordValue(coords.lat)}, ${formatCoordValue(coords.lng)}`;
+  }
+
+  function setGuessSelectionInfo(coords) {
+    if (!refs.guessSelectionInfo) {
+      return;
+    }
+
+    if (!coords) {
+      refs.guessSelectionInfo.textContent = 'Secim yok';
+      refs.guessSelectionInfo.classList.remove('has-selection');
+      return;
+    }
+
+    refs.guessSelectionInfo.textContent = `Secimin: ${formatCoords(coords)}`;
+    refs.guessSelectionInfo.classList.add('has-selection');
+  }
+
   function formatRoundTime(seconds) {
     if (!Number.isFinite(seconds) || seconds <= 0) {
       return 'suresiz';
@@ -113,10 +160,11 @@
     const line = `${rules.totalRounds} tur · ${formatRoundTime(rules.roundTimeSeconds)} · maks ${
       (rules.maxScorePerRound * rules.totalRounds).toLocaleString()
     } puan`;
+    const economyNote = getEconomyModeEnabled() ? ' · EKO mod acik' : '';
 
     refs.rulesPreview.textContent =
       `${rules.presetLabel} ayari: puan dusus hizi ~ ${rules.scoreDecayKm} km bazli.`;
-    refs.rulesHint.textContent = `${line} · key tarayicinda duz metin saklanir.`;
+    refs.rulesHint.textContent = `${line} · key tarayicinda duz metin saklanir${economyNote}.`;
   }
 
   function setRoundInfo(round, totalRounds) {
@@ -180,6 +228,7 @@
       setTimeout(function refreshMapSize() {
         state.guessMap.invalidateSize();
       }, 0);
+      setGuessSelectionInfo(state.guessCoords);
       return;
     }
 
@@ -203,6 +252,8 @@
         onGuessSelected();
       }
     });
+
+    setGuessSelectionInfo(null);
   }
 
   function placeGuessMarker(lat, lng) {
@@ -213,12 +264,20 @@
     }
 
     state.guessMarker = L.circleMarker([lat, lng], {
-      radius: 8,
+      radius: 9,
       fillColor: '#e8ff47',
       color: '#000',
       weight: 2,
       fillOpacity: 1
     }).addTo(state.guessMap);
+
+    setGuessSelectionInfo(state.guessCoords);
+
+    if (state.guessMap) {
+      const currentZoom = state.guessMap.getZoom();
+      const targetZoom = Math.max(4, currentZoom);
+      state.guessMap.setView([lat, lng], targetZoom, { animate: true });
+    }
 
     refs.guessBtn.disabled = false;
   }
@@ -230,6 +289,7 @@
     }
 
     state.guessCoords = null;
+    setGuessSelectionInfo(null);
     refs.guessBtn.disabled = true;
   }
 
@@ -243,11 +303,38 @@
   }
 
   function hideResultOverlay() {
+    setResultFocusMode(false);
     refs.resultOverlay.classList.remove('show');
   }
 
   function hideFinalOverlay() {
     refs.finalOverlay.classList.remove('show');
+  }
+
+  function setResultFocusMode(isFocused) {
+    const focused = Boolean(isFocused);
+    refs.resultOverlay.classList.toggle('focus-map', focused);
+    if (refs.resultFocusBtn) {
+      refs.resultFocusBtn.textContent = focused ? 'HARITAYI KUCULT' : 'HARITAYI BUYUT';
+    }
+  }
+
+  function renderResultMeta(result) {
+    if (!refs.resultMeta) {
+      return;
+    }
+
+    const guessText = result.guessCoords
+      ? formatCoords(result.guessCoords)
+      : 'Tahmin secilmedi';
+    const actualText = result.actualCoords
+      ? formatCoords(result.actualCoords)
+      : 'Konum bulunamadi';
+
+    refs.resultMeta.innerHTML =
+      `<div><strong>Senin secimin:</strong> ${guessText}</div>` +
+      `<div><strong>Gercek konum:</strong> ${actualText}</div>` +
+      `<div><strong>Hata mesafesi:</strong> ${result.distanceText}</div>`;
   }
 
   function renderResultMap(actualCoords, guessCoords) {
@@ -267,23 +354,37 @@
     resultTileLayer.addTo(state.resultMap);
 
     if (actualCoords) {
-      L.circleMarker([actualCoords.lat, actualCoords.lng], {
+      const actualMarker = L.circleMarker([actualCoords.lat, actualCoords.lng], {
         radius: 10,
         fillColor: '#e8ff47',
         color: '#000',
         weight: 2,
         fillOpacity: 1
       }).addTo(state.resultMap);
+
+      actualMarker.bindTooltip('GERCEK', {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -10],
+        className: 'result-map-tooltip'
+      });
     }
 
     if (guessCoords) {
-      L.circleMarker([guessCoords.lat, guessCoords.lng], {
+      const guessMarker = L.circleMarker([guessCoords.lat, guessCoords.lng], {
         radius: 10,
         fillColor: '#ff4747',
         color: '#000',
         weight: 2,
         fillOpacity: 1
       }).addTo(state.resultMap);
+
+      guessMarker.bindTooltip('TAHMININ', {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -10],
+        className: 'result-map-tooltip'
+      });
     }
 
     if (actualCoords && guessCoords) {
@@ -305,10 +406,15 @@
           [actualCoords.lat, actualCoords.lng],
           [guessCoords.lat, guessCoords.lng]
         ]),
-        { padding: [30, 30] }
+        {
+          padding: [40, 40],
+          maxZoom: 9
+        }
       );
     } else if (actualCoords) {
       state.resultMap.setView([actualCoords.lat, actualCoords.lng], 5);
+    } else if (guessCoords) {
+      state.resultMap.setView([guessCoords.lat, guessCoords.lng], 5);
     }
 
     setTimeout(function invalidateResultMap() {
@@ -323,6 +429,8 @@
     refs.roundScoreDisplay.className = result.score < 1000 ? 'round-score bad' : 'round-score';
     refs.roundDistDisplay.textContent = result.distanceText;
     refs.nextBtn.textContent = result.nextButtonLabel;
+    setResultFocusMode(true);
+    renderResultMeta(result);
 
     renderResultMap(result.actualCoords, result.guessCoords);
     refs.resultOverlay.classList.add('show');
@@ -344,7 +452,7 @@
       .join(' | ');
   }
 
-  function renderUsageSummary(usage) {
+  function renderUsageSummary(usage, economyMode) {
     const currency = config.pricing.currency;
 
     refs.usageSummary.innerHTML =
@@ -364,10 +472,11 @@
       `<div class="usage-note">Status dagilimi: ${formatStatusMap(usage.metadataStatuses)}</div>` +
       `<div class="usage-note">Fatal nedenler: ${formatStatusMap(usage.fatalReasons)}</div>` +
       '<div class="usage-note">Not: OSM tile sayilari bilgi amaclidir ve Google maliyetine dahil degildir.</div>' +
+      `<div class="usage-note">EKO mod: <b>${economyMode ? 'acik' : 'kapali'}</b></div>` +
       '<div class="usage-note">Not: Kesin tutar Google Cloud Billing tarafinda gorulur.</div>';
   }
 
-  function showFinal(totalScore, roundScores, usage, rules) {
+  function showFinal(totalScore, roundScores, usage, rules, economyMode) {
     hideResultOverlay();
     refs.finalScoreDisplay.textContent = totalScore.toLocaleString();
 
@@ -396,7 +505,7 @@
       })
       .join('');
 
-    renderUsageSummary(usage);
+    renderUsageSummary(usage, economyMode);
     refs.finalOverlay.classList.add('show');
   }
 
@@ -412,6 +521,7 @@
     setDifficultyPreset(state.selectedPresetId);
     setRoundCount(state.selectedRoundCount);
     setRoundTimeOverride(state.selectedRoundTimeOverride);
+    setEconomyModeEnabled(state.economyMode);
     setRulesSummary(state.rules);
 
     refs.difficultySelect.addEventListener('change', function onDifficultyChange() {
@@ -447,6 +557,12 @@
         setRulesSummary(state.rules);
       });
     }
+
+    if (refs.economyModeInput) {
+      refs.economyModeInput.addEventListener('change', function onEconomyModeChange() {
+        setRulesSummary(state.rules);
+      });
+    }
   }
 
   refs.apiKeyInput.addEventListener('input', function onApiKeyInput() {
@@ -458,6 +574,18 @@
     refs.apiKeyInput.value = '';
     showKeySavedBadge(false);
   });
+
+  if (refs.resultFocusBtn) {
+    refs.resultFocusBtn.addEventListener('click', function onResultFocusClick() {
+      const willFocus = !refs.resultOverlay.classList.contains('focus-map');
+      setResultFocusMode(willFocus);
+      setTimeout(function refreshResultMapAfterFocusToggle() {
+        if (state.resultMap) {
+          state.resultMap.invalidateSize();
+        }
+      }, 50);
+    });
+  }
 
   populateSavedKey();
   initializePresetSelector();
@@ -474,6 +602,8 @@
     getSelectedRoundCount,
     setRoundTimeOverride,
     getSelectedRoundTimeOverride,
+    setEconomyModeEnabled,
+    getEconomyModeEnabled,
     setRulesSummary,
     setRoundInfo,
     setTotalScore,
